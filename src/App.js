@@ -1,6 +1,6 @@
-import Chart from './components/Chart'
+import ProbzAIChart from './components/Chart'
 import './App.css'
 
-const App = () => <Chart />
+const App = () => <ProbzAIChart />
 
 export default App

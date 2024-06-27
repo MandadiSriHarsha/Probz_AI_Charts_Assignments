@@ -6,7 +6,7 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  ResponsiveContainer,
+  Brush,
 } from 'recharts'
 import generatedData from '../../data/dataGenerator'
 import '../../styles/chart.css'
@@ -35,6 +35,8 @@ const monthNames = {
   11: 'December',
 }
 
+const timeframekeys = ['Monthly', 'Weekly', 'Daily']
+
 const chartData = modifiedData()
 const availableMonths = []
 chartData.forEach(eachitem => {
@@ -44,9 +46,8 @@ chartData.forEach(eachitem => {
   }
 })
 const months = availableMonths.map(eachitem => [eachitem, monthNames[eachitem]])
-const timeframekeys = ['Monthly', 'Weekly', 'Daily']
 
-const Chart = () => {
+const ProbzAIChart = () => {
   const [defaultTimeFrame, setTimeFrame] = useState('Monthly')
   const [defaultMonth, setMonth] = useState(months[0][0])
   const [chartsData, setChartData] = useState(
@@ -78,41 +79,64 @@ const Chart = () => {
     } else if (defaultTimeFrame === 'Daily') {
       newChartData = chartData
         .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
-        .slice(0, 3)
+        .slice(0, 2)
     } else if (defaultTimeFrame === 'Monthly') {
-      newChartData = chartData.filter(
-        eachitem => new Date(eachitem.timestamp).getMonth() === defaultMonth,
-      )
+      newChartData = chartData
+        .filter(
+          eachitem => new Date(eachitem.timestamp).getMonth() === defaultMonth,
+        )
+        .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp))
     }
     setChartData(newChartData)
   }, [defaultMonth, defaultTimeFrame])
 
   const formatData = receivedData => {
-    const formattedData = receivedData.map(eachitem => ({
-      timeStamp: new Date(eachitem.timestamp).getMonth(),
-      value: eachitem.value,
-    }))
+    let formattedData
+    if (defaultTimeFrame === 'Monthly') {
+      formattedData = receivedData.map(eachitem => ({
+        timestamp: new Date(eachitem.timestamp).getDate(),
+        value: eachitem.value,
+      }))
+    } else {
+      formattedData = receivedData.map(eachitem => ({
+        timestamp: `${new Date(eachitem.timestamp).getMonth() + 1}/${new Date(
+          eachitem.timestamp,
+        ).getDate()}`,
+        value: eachitem.value,
+      }))
+    }
     return formattedData
   }
 
   const generateColor = check => {
     let color
     if (check === 'Monthly') {
-      color = '#f79605'
+      if (defaultMonth === 0) {
+        color = '#f79605'
+      } else if (defaultMonth === 1) {
+        color = '#25ba37'
+      } else if (defaultMonth === 2) {
+        color = '#f54b07'
+      } else if (defaultMonth === 3) {
+        color = '#c507f5'
+      } else if (defaultMonth === 4) {
+        color = '#fa1414'
+      }
     } else if (check === 'Daily') {
       color = '#e61074'
-    } else {
+    } else if (check === 'Weekly') {
       color = '#0e5df0'
     }
     return color
   }
 
   return (
-    <div className="charts-page-container">
-      <h1 className="charts-container-heading">Probz AI Charts</h1>
-      <p className="charts-container-description">
+    <div className="home-page-bg-container">
+      <h1 className="home-page-container-heading">Probz AI Charts</h1>
+      <p className="home-page-container-description">
         Here you can view chart`s built using react recharts where the chart`s
-        display`s the data of no of views in monthly or weekly or daily basis.
+        display`s the data of no of views in monthly or weekly or daily basis
+        from January 2024 to May 2024.
       </p>
       <div className="dropdown-bg-container">
         <select onChange={changeTimeFrame} className="dropdown">
@@ -133,43 +157,57 @@ const Chart = () => {
         )}
       </div>
       <div className="charts-bg-container">
-        <ResponsiveContainer className="responsive-container">
-          <AreaChart
-            width="100%"
-            height="100%"
-            data={formatData(chartsData)}
-            margin={{top: 0, right: 0, left: 0, bottom: 0}}
-          >
-            <defs>
-              <linearGradient id="colorUv" x1="0" y1="0" x2="0" y2="1">
-                <stop
-                  offset="5%"
-                  stopColor={generateColor(defaultTimeFrame)}
-                  stopOpacity={0.8}
-                />
-                <stop
-                  offset="95%"
-                  stopColor={generateColor(defaultTimeFrame)}
-                  stopOpacity={0}
-                />
-              </linearGradient>
-            </defs>
-            <XAxis dataKey="timestamp" />
-            <YAxis dataKey="value" />
-            <CartesianGrid strokeDasharray="3 3" />
-            <Tooltip />
-            <Area
-              type="monotone"
-              dataKey="value"
-              stroke={generateColor(defaultTimeFrame)}
-              fillOpacity={1}
-              fill="url(#colorUv)"
-            />
-          </AreaChart>
-        </ResponsiveContainer>
+        <AreaChart
+          width={1500}
+          height={500}
+          data={formatData(chartsData)}
+          margin={{top: 0, right: 0, left: 0, bottom: 0}}
+        >
+          <defs>
+            <linearGradient id="colorUv" x1="0" y1="0" x2="0" y2="1">
+              <stop
+                offset="5%"
+                stopColor={generateColor(defaultTimeFrame)}
+                stopOpacity={0.8}
+              />
+              <stop
+                offset="95%"
+                stopColor={generateColor(defaultTimeFrame)}
+                stopOpacity={0}
+              />
+            </linearGradient>
+          </defs>
+          <XAxis
+            dataKey="timestamp"
+            axisLine={{stroke: generateColor(defaultTimeFrame), strokeWidth: 2}}
+            tickLine={{stroke: '#000000'}}
+            tick={{fill: '#000000'}}
+          />
+          <YAxis
+            dataKey="value"
+            axisLine={{stroke: generateColor(defaultTimeFrame), strokeWidth: 2}}
+            tickLine={{stroke: '#000000'}}
+            tick={{fill: '#000000'}}
+          />
+          <CartesianGrid strokeDasharray="solid" strokeWidth="1 1" />
+          <Tooltip cursor={{stroke: '#0a10c4', strokeWidth: 2}} />
+          <Area
+            type="monotone"
+            dataKey="value"
+            stroke={generateColor(defaultTimeFrame)}
+            fillOpacity={1}
+            fill="url(#colorUv)"
+          />
+          <Brush
+            dataKey="timestamp"
+            height={30}
+            stroke="#0a10c4"
+            margin={{top: 20, left: 0, bottom: 0, right: 0}}
+          />
+        </AreaChart>
       </div>
     </div>
   )
 }
 
-export default Chart
+export default ProbzAIChart
